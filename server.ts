@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
+import fs from 'fs';
 import { simpleParser } from 'mailparser';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
@@ -110,7 +111,7 @@ const isAdmin = (req: any, res: any, next: any) => {
 // --- Express App Setup ---
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -391,13 +392,17 @@ async function startServer() {
   });
 
   // --- Vite Middleware ---
-  if (process.env.NODE_ENV !== 'production') {
+  const distExists = fs.existsSync(path.join(process.cwd(), 'dist', 'index.html'));
+
+  if (process.env.NODE_ENV !== 'production' || !distExists) {
+    console.log('Running Vite middleware (Dev mode or dist missing)');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
   } else {
+    console.log('Serving static dist folder');
     app.use(express.static(path.join(process.cwd(), 'dist')));
     app.get('*', (req, res) => {
       res.sendFile(path.join(process.cwd(), 'dist', 'index.html'));
