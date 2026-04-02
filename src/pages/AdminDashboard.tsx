@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/auth';
-import { useNavigate } from 'react-router-dom';
-import { Settings, Package, ShoppingBag, Mail } from 'lucide-react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { Settings, Package, ShoppingBag, Mail, ShieldAlert } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, token } = useAuthStore();
@@ -14,12 +14,14 @@ export default function AdminDashboard() {
   const [emails, setEmails] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!user || !user.isAdmin) {
-      navigate('/');
-      return;
+    if (user && user.isAdmin) {
+      fetchData();
     }
-    fetchData();
   }, [user, activeTab]);
+
+  if (!user || !user.isAdmin) {
+    return <Navigate to="/" replace />;
+  }
 
   const fetchData = async () => {
     const headers = { 'Authorization': `Bearer ${token}` };
@@ -225,5 +227,4 @@ export default function AdminDashboard() {
   );
 }
 
-// Need to import ShieldAlert at the top, adding it here for standalone compilation
-import { ShieldAlert } from 'lucide-react';
+
